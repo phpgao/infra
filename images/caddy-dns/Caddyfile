@@ -1,0 +1,35 @@
+# Caddy 默认配置文件
+# 支持多 DNS 服务商自动 HTTPS
+
+{
+    # 全局配置
+    admin off
+}
+
+# 示例: example.com 使用 Cloudflare DNS
+example.com {
+    # 反向代理到本地服务
+    reverse_proxy localhost:8080
+
+    # 启用 Cloudflare DNS 验证
+    tls {
+        dns cloudflare {env.CF_API_EMAIL} {env.CF_API_KEY}
+    }
+}
+
+# 示例: api.example.com 使用 AWS Route53
+api.example.com {
+    reverse_proxy localhost:8081
+
+    tls {
+        dns route53 {env.AWS_ACCESS_KEY_ID} {env.AWS_SECRET_ACCESS_KEY}
+    }
+}
+
+# 其他可用 DNS 服务商:
+# - googleclouddns: dns googleclouddns {env.GOOGLECLOUD_PROJECT} {env.GOOGLECLOUD_CREDENTIALS}
+# - azure: dns azure {env.AZURE_TENANT_ID} {env.AZURE_CLIENT_ID} {env.AZURE_CLIENT_SECRET} {env.AZURE_SUBSCRIPTION_ID}
+# - alidns: dns alidns {env.ALIDNS_ACCESS_KEY} {env.ALIDNS_SECRET_KEY}
+# - namecheap: dns namecheap {env.NAMECHEAP_USERNAME} {env.NAMECHEAP_API_KEY}
+# - gandi: dns gandi {env.GANDI_TOKEN}
+# - ovh: dns ovh {env.OVH_ENDPOINT} {env.OVH_APPLICATION_ID} {env.OVH_TOKEN}

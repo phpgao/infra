@@ -1,0 +1,127 @@
+name: Build shadowsocks
+
+on:
+  push:
+    paths:
+      - 'images/shadowsocks/**'
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch: {}
+
+env:
+  IMAGE_PREFIX: shadowsocks
+
+jobs:
+  build-rust:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from Dockerfile
+        id: version
+        run: |
+          SS_RUST_VERSION=$(grep "ARG SS_RUST_VERSION=" images/shadowsocks/rust/Dockerfile | cut -d'=' -f2 | tr -d '\r')
+          echo "version=${SS_RUST_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Shadowsocks Rust version: ${SS_RUST_VERSION}"
+
+      - name: Build and push Rust image
+        uses: docker/build-push-action@v7
+        with:
+          context: images/shadowsocks/rust
+          push: true
+          tags: |
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-rust:${{ steps.version.outputs.version }}
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-rust:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-libev:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from Dockerfile
+        id: version
+        run: |
+          SS_LIBEV_VERSION=$(grep "ARG SS_LIBEV_VERSION=" images/shadowsocks/libev/Dockerfile | cut -d'=' -f2 | tr -d '\r')
+          echo "version=${SS_LIBEV_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Shadowsocks libev version: ${SS_LIBEV_VERSION}"
+
+      - name: Build and push libev image
+        uses: docker/build-push-action@v7
+        with:
+          context: images/shadowsocks/libev
+          push: true
+          tags: |
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-libev:${{ steps.version.outputs.version }}
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-libev:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-go2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from Dockerfile
+        id: version
+        run: |
+          GO_SHADOWSOCKS2_VERSION=$(grep "ARG GO_SHADOWSOCKS2_VERSION=" images/shadowsocks/go2/Dockerfile | cut -d'=' -f2 | tr -d '\r' | sed 's/^v//')
+          echo "version=${GO_SHADOWSOCKS2_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Shadowsocks go2 version: ${GO_SHADOWSOCKS2_VERSION}"
+
+      - name: Build and push go2 image
+        uses: docker/build-push-action@v7
+        with:
+          context: images/shadowsocks/go2
+          push: true
+          tags: |
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-go2:${{ steps.version.outputs.version }}
+            ghcr.io/phpgao/${{ env.IMAGE_PREFIX }}-go2:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
